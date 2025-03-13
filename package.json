@@ -1,0 +1,25 @@
+{
+  "name": "gpt-rules",
+  "version": "0.0.1",
+  "description": "Chrome extension for managing AI chat rules and context",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.260",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0",
+    "ts-loader": "^9.5.0",
+    "css-loader": "^6.8.0",
+    "style-loader": "^3.3.0",
+    "copy-webpack-plugin": "^11.0.0"
+  }
+}
