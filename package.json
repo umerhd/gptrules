@@ -1,6 +1,6 @@
 {
-  "name": "gpt-rules",
-  "version": "0.0.1",
+  "name": "ai-chat-rules",
+  "version": "1.0.0",
   "description": "Chrome extension for managing AI chat rules and context",
   "scripts": {
     "build": "webpack --mode production",
