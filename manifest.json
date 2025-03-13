@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "AI Chat Rules Assistant",
-  "version": "1.0.0",
+  "name": "GPT Rules",
+  "version": "0.0.1",
   "description": "Enhance AI chat interfaces with custom rules and context management",
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["https://chat.openai.com/*", "https://claude.ai/*"],
@@ -10,9 +10,8 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://chat.openai.com/*", "https://claude.ai/*"],
-      "js": ["content.js"],
-      "css": ["content.css"]
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
     }
   ],
   "background": {

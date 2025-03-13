@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { createRoot } from "react-dom/client";
 import { Rule, RuleSet } from "../types";
+import "./popup.css";
 
 const Popup: React.FC = () => {
   const [ruleSets, setRuleSets] = useState<RuleSet[]>([]);
@@ -7,45 +9,81 @@ const Popup: React.FC = () => {
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
 
   useEffect(() => {
-    // Load rule sets from storage when popup opens
+    console.log("Popup mounted - Loading initial data");
     loadRuleSets();
   }, []);
 
   const loadRuleSets = async () => {
-    const result = await chrome.storage.sync.get(["ruleSets", "activeRuleSet"]);
-    setRuleSets(result.ruleSets || []);
-    setActiveRuleSet(result.activeRuleSet || null);
+    try {
+      const result = await chrome.storage.sync.get([
+        "ruleSets",
+        "activeRuleSet",
+      ]);
+      console.log("Loaded rule sets:", result);
+      setRuleSets(result.ruleSets || []);
+      setActiveRuleSet(result.activeRuleSet || null);
+    } catch (error) {
+      console.error("Error loading rule sets:", error);
+    }
   };
 
   const saveRule = async (rule: Rule) => {
-    if (!activeRuleSet) return;
+    try {
+      if (!activeRuleSet) {
+        console.warn("No active rule set to save to");
+        return;
+      }
 
-    const updatedRuleSet = {
-      ...activeRuleSet,
-      rules: editingRule
-        ? activeRuleSet.rules.map((r) => (r.id === rule.id ? rule : r))
-        : [...activeRuleSet.rules, rule],
-    };
+      console.log("Saving rule:", rule);
+      const updatedRuleSet = {
+        ...activeRuleSet,
+        rules: editingRule
+          ? activeRuleSet.rules.map((r) => (r.id === rule.id ? rule : r))
+          : [...activeRuleSet.rules, rule],
+      };
 
-    const updatedRuleSets = ruleSets.map((rs) =>
-      rs.id === updatedRuleSet.id ? updatedRuleSet : rs
-    );
+      await chrome.storage.sync.set({
+        ruleSets: ruleSets.map((rs) =>
+          rs.id === updatedRuleSet.id ? updatedRuleSet : rs
+        ),
+        activeRuleSet: updatedRuleSet,
+      });
+      console.log("Rule saved successfully");
 
-    await chrome.storage.sync.set({
-      ruleSets: updatedRuleSets,
-      activeRuleSet: updatedRuleSet,
-    });
-
-    setRuleSets(updatedRuleSets);
-    setActiveRuleSet(updatedRuleSet);
-    setEditingRule(null);
+      setRuleSets(
+        ruleSets.map((rs) =>
+          rs.id === updatedRuleSet.id ? updatedRuleSet : rs
+        )
+      );
+      setActiveRuleSet(updatedRuleSet);
+      setEditingRule(null);
+    } catch (error) {
+      console.error("Error saving rule:", error);
+    }
   };
 
   return (
     <div className="popup-container">
       <header>
         <h1>AI Chat Rules Manager</h1>
+        <div>Active Rules: {activeRuleSet?.rules.length || 0}</div>
       </header>
+
+      <button
+        onClick={async () => {
+          console.log("Testing storage...");
+          try {
+            await chrome.storage.sync.set({ test: "Hello World" });
+            console.log("Test data saved");
+            const result = await chrome.storage.sync.get(["test"]);
+            console.log("Test data loaded:", result);
+          } catch (error) {
+            console.error("Storage test failed:", error);
+          }
+        }}
+      >
+        Test Storage
+      </button>
 
       <div className="rule-sets">
         <h2>Rule Sets</h2>
@@ -166,5 +204,18 @@ const RuleForm: React.FC<RuleFormProps> = ({
     </form>
   );
 };
+
+// Initialize React with error handling
+const container = document.getElementById("root");
+if (container) {
+  console.log("Initializing React app");
+  try {
+    const root = createRoot(container);
+    root.render(<Popup />);
+    console.log("React app rendered successfully");
+  } catch (error) {
+    console.error("Failed to render React app:", error);
+  }
+}
 
 export default Popup;
