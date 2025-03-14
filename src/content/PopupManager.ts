@@ -14,10 +14,6 @@ export class PopupManager {
   }
 
   public setRules(rules: Rule[]) {
-    console.log(
-      "[GPTRules Debug] Setting rules in PopupManager:",
-      rules.length
-    );
     this.rules = rules;
   }
 
@@ -36,9 +32,6 @@ export class PopupManager {
     this.popupContainer.style.pointerEvents = "none"; // Start with none
     this.popupContainer.style.display = "none"; // Hide initially
 
-    // Add debugging log
-    console.log("[GPTRules Debug] Creating popup container");
-
     // Append to body
     document.body.appendChild(this.popupContainer);
   }
@@ -49,7 +42,6 @@ export class PopupManager {
     insertCallback: (content: string) => void
   ) {
     if (!this.rules.length || !this.popupContainer) {
-      console.log("[GPTRules Debug] Cannot show popup: no rules or container");
       return;
     }
 
@@ -58,16 +50,9 @@ export class PopupManager {
     );
 
     if (filteredRules.length === 0) {
-      console.log("[GPTRules Debug] No matching rules found for:", filter);
       this.hidePopup();
       return;
     }
-
-    console.log(
-      "[GPTRules Debug] Showing popup with",
-      filteredRules.length,
-      "rules"
-    );
 
     // Make container visible
     if (this.popupContainer) {
@@ -104,7 +89,6 @@ export class PopupManager {
           rules: filteredRules,
           position: position,
           onRuleSelect: (rule) => {
-            console.log("[GPTRules Debug] Rule selected:", rule.name);
             insertCallback(rule.content);
             this.hidePopup();
           },
@@ -113,13 +97,12 @@ export class PopupManager {
         this.popupContainer
       );
     } catch (error) {
-      console.error("[GPTRules Debug] Error rendering popup:", error);
+      console.error("Error rendering popup:", error);
     }
   }
 
   public hidePopup() {
     if (this.popupContainer) {
-      console.log("[GPTRules Debug] Hiding popup");
       ReactDOM.unmountComponentAtNode(this.popupContainer);
       this.popupContainer.style.display = "none";
       this.isPopupVisible = false;
@@ -130,7 +113,6 @@ export class PopupManager {
     // Use message passing to get rules from background script
     chrome.runtime.sendMessage({ type: "GET_RULES" }, (response) => {
       this.rules = response || [];
-      console.log("[GPTRules Debug] Loaded", this.rules.length, "rules");
     });
   }
 }

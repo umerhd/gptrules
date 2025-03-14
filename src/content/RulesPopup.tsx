@@ -19,37 +19,11 @@ const RulesPopup: React.FC<RulesPopupProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Add debugging effect
-  useEffect(() => {
-    console.log(
-      "[GPTRules Debug] RulesPopup rendered with",
-      rules.length,
-      "rules"
-    );
-
-    // Check if there are any CSS issues
-    if (containerRef.current) {
-      const styles = window.getComputedStyle(containerRef.current);
-      console.log("[GPTRules Debug] Popup container styles:", {
-        pointerEvents: styles.pointerEvents,
-        zIndex: styles.zIndex,
-        position: styles.position,
-        display: styles.display,
-      });
-    }
-
-    return () => {
-      console.log("[GPTRules Debug] RulesPopup unmounting");
-    };
-  }, [rules.length]);
-
   const handleRuleClick = (rule: Rule, index: number) => {
-    console.log("[GPTRules Debug] Rule clicked:", rule.name);
     onRuleSelect(rule);
   };
 
   const handleMouseEnter = (index: number) => {
-    console.log("[GPTRules Debug] Mouse entered rule at index:", index);
     setSelectedIndex(index);
   };
 
@@ -63,7 +37,6 @@ const RulesPopup: React.FC<RulesPopupProps> = ({
         minWidth: "200px",
       }}
       onClick={(e) => {
-        console.log("[GPTRules Debug] Popup container clicked");
         e.stopPropagation(); // Prevent click from propagating
       }}
     >
