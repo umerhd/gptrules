@@ -18,7 +18,7 @@ export class ContentEditableHandler {
 
   private handleInput(element: HTMLElement) {
     const textContent = element.innerText || "";
-    const match = textContent.match(/@@(\w*)$/); // Use @@ to avoid conflicts
+    const match = textContent.match(/#(\w*)$/); // Use # as the trigger
 
     if (match) {
       this.popupManager.showPopup(element, match[1], (content) => {
@@ -34,14 +34,14 @@ export class ContentEditableHandler {
       // Get the current text content
       const textContent = element.innerText;
 
-      // Find the @@ pattern
-      const match = textContent.match(/@@\w*$/);
+      // Find the # pattern
+      const match = textContent.match(/#\w*$/);
       if (!match) {
         return;
       }
 
       // Replace the entire content with the new content
-      const newContent = textContent.replace(/@@\w*$/, content);
+      const newContent = textContent.replace(/#\w*$/, content);
       element.innerText = newContent;
 
       // Focus the contenteditable element
@@ -71,7 +71,7 @@ export class ContentEditableHandler {
       }
     } catch (error) {
       // Fallback method: replace the entire content
-      const newContent = element.innerText.replace(/@@\w*$/, content);
+      const newContent = element.innerText.replace(/#\w*$/, content);
       element.innerText = newContent;
 
       // Focus the contenteditable element

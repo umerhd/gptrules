@@ -1,0 +1,88 @@
+/* Rules popup styles */
+#rules-popup-container {
+  position: fixed;
+  z-index: 99999;
+  top: 0;
+  left: 0;
+  pointer-events: none; /* Allow clicks to pass through the container but not the popup */
+  width: 100%;
+  height: 100%;
+}
+
+#rules-popup-container > div {
+  pointer-events: auto; /* Make the popup itself clickable */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 2px solid #3b82f6; /* Blue border */
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+  max-height: 250px; /* Limit height to show ~5 items */
+  overflow-y: auto; /* Enable scrolling */
+}
+
+.rules-list {
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.rules-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rules-list::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+}
+
+.rules-list::-webkit-scrollbar-track {
+  background-color: #f3f4f6;
+}
+
+/* Highlight the selected rule */
+.rule-item.selected {
+  background-color: #f0f7ff !important;
+  border-left: 3px solid #3b82f6;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure the popup is visible on all sites */
+#rules-popup-container > div * {
+  color: #000 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif !important;
+  font-size: 14px !important;
+}
+
+#rules-popup-container .rule-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.15s ease;
+}
+
+#rules-popup-container .rule-item:hover {
+  background-color: #f0f7ff;
+}
+
+#rules-popup-container .rule-item:last-child {
+  border-bottom: none;
+}
+
+#rules-popup-container .rule-title {
+  font-weight: 600;
+}
