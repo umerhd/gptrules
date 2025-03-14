@@ -44,7 +44,7 @@
 /* Highlight the selected rule */
 .rule-item.selected {
   background-color: #f0f7ff !important;
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid #000000;
 }
 
 @keyframes fadeIn {
@@ -78,7 +78,7 @@
 }
 
 #rules-popup-container .rule-item:hover {
-  background-color: #f0f7ff;
+  background-color: #e0e0e0;
 }
 
 #rules-popup-container .rule-item:last-child {
