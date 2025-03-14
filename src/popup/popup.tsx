@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { Rule } from "../types";
-import "./popup.css";
+import "../global.css";
+import { Gavel } from "lucide-react";
 
 const Popup: React.FC = () => {
   const [rules, setRules] = useState<Rule[]>([]);
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
 
   useEffect(() => {
-    console.log("Popup mounted - Loading initial data");
     loadRules();
+
+    // Fix for popup width
+    document.body.style.width = "400px";
+    document.body.style.minWidth = "400px";
   }, []);
 
   const loadRules = async () => {
     try {
-      const result = await chrome.storage.sync.get(["rules"]);
-      console.log("Loaded rules:", result);
-      setRules(result.rules || []);
+      // Use message passing to get rules from background script
+      chrome.runtime.sendMessage({ type: "GET_RULES" }, (response) => {
+        setRules(response || []);
+      });
     } catch (error) {
       console.error("Error loading rules:", error);
     }
@@ -24,95 +29,145 @@ const Popup: React.FC = () => {
 
   const saveRule = async (rule: Rule) => {
     try {
-      console.log("Saving rule:", rule);
-      const updatedRules = editingRule
-        ? rules.map((r) => (r.id === rule.id ? rule : r))
-        : [...rules, rule];
+      // Check if this is a new rule or an existing one
+      const isNewRule = !rules.some(
+        (existingRule) => existingRule.id === rule.id
+      );
 
-      await chrome.storage.sync.set({
-        rules: updatedRules,
-      });
-      console.log("Rule saved successfully");
-
-      setRules(updatedRules);
-      setEditingRule(null);
+      if (isNewRule) {
+        // For new rules, send add message
+        chrome.runtime.sendMessage(
+          {
+            type: "ADD_RULE",
+            rule,
+          },
+          (response) => {
+            if (response && response.success) {
+              setRules(response.rules);
+            } else {
+              console.error("Error adding rule:", response?.error);
+            }
+            setEditingRule(null);
+          }
+        );
+      } else {
+        // If editing an existing rule, send update message
+        chrome.runtime.sendMessage(
+          {
+            type: "UPDATE_RULE",
+            rule,
+          },
+          (response) => {
+            if (response && response.success) {
+              setRules(response.rules);
+            } else {
+              console.error("Error updating rule:", response?.error);
+            }
+            setEditingRule(null);
+          }
+        );
+      }
     } catch (error) {
-      console.error("Error saving rule:", error);
+      console.error("Error in saveRule:", error);
+      setEditingRule(null);
     }
   };
 
   const deleteRule = async (ruleId: string) => {
     try {
-      const updatedRules = rules.filter((r) => r.id !== ruleId);
-      await chrome.storage.sync.set({
-        rules: updatedRules,
-      });
-      setRules(updatedRules);
+      // Send delete message
+      chrome.runtime.sendMessage(
+        {
+          type: "DELETE_RULE",
+          ruleId,
+        },
+        (response) => {
+          if (response && response.success) {
+            setRules(response.rules);
+          } else {
+            console.error("Error deleting rule:", response?.error);
+          }
+        }
+      );
     } catch (error) {
       console.error("Error deleting rule:", error);
     }
   };
 
   return (
-    <div className="popup-container">
-      <header>
-        <h1>AI Chat Rules Manager</h1>
-        <div>Active Rules: {rules.length}</div>
+    <div className="w-[400px] p-5 font-inter bg-white">
+      <header className="mb-5 flex items-center space-x-2">
+        <Gavel className="w-6 h-6 text-black" />
+        <h1 className="text-xl font-inter font-bold"> GPT Rules Manager</h1>
       </header>
 
-      <button
-        onClick={async () => {
-          console.log("Testing storage...");
-          try {
-            await chrome.storage.sync.set({ test: "Hello World" });
-            console.log("Test data saved");
-            const result = await chrome.storage.sync.get(["test"]);
-            console.log("Test data loaded:", result);
-          } catch (error) {
-            console.error("Storage test failed:", error);
-          }
-        }}
-      >
-        Test Storage
-      </button>
+      <div className="mt-5">
+        <h2 className="text-lg font-roboto font-semibold mb-3">Rules</h2>
 
-      <div className="rules-container">
-        <h2>Rules</h2>
+        <button
+          className="bg-black hover:bg-gray-800 text-white py-2 px-4 rounded w-full mb-4 font-helvetica font-semibold text-sm"
+          onClick={() => {
+            const newRule: Rule = {
+              id: crypto.randomUUID(),
+              name: "",
+              description: "",
+              content: "",
+              isActive: true,
+            };
+            setEditingRule(newRule);
+          }}
+        >
+          Add New Rule
+        </button>
 
-        {editingRule ? (
-          <RuleForm
-            initialRule={editingRule}
-            onSave={saveRule}
-            onCancel={() => setEditingRule(null)}
-          />
-        ) : (
-          <button
-            className="add-rule-btn"
-            onClick={() =>
-              setEditingRule({
-                id: crypto.randomUUID(),
-                name: "",
-                description: "",
-                content: "",
-                isActive: true,
-              })
-            }
-          >
-            Add New Rule
-          </button>
+        {/* Show the form for new rules at the bottom */}
+        {editingRule && !rules.some((r) => r.id === editingRule.id) && (
+          <div className="border border-gray-200 rounded-lg p-4">
+            <RuleForm
+              initialRule={editingRule}
+              onSave={saveRule}
+              onCancel={() => setEditingRule(null)}
+            />
+          </div>
         )}
-
-        <div className="rules-list">
+        <div className="space-y-3">
           {rules.map((rule) => (
-            <div key={rule.id} className="rule-item">
-              <div className="rule-header">
-                <h3>{rule.name}</h3>
-                <div className="rule-actions">
-                  <button onClick={() => setEditingRule(rule)}>Edit</button>
-                  <button onClick={() => deleteRule(rule.id)}>Delete</button>
-                </div>
-              </div>
-              <p className="rule-description">{rule.description}</p>
+            <div
+              key={rule.id}
+              className="border border-gray-200 rounded-lg p-4"
+            >
+              {editingRule && editingRule.id === rule.id ? (
+                <RuleForm
+                  initialRule={editingRule}
+                  onSave={saveRule}
+                  onCancel={() => setEditingRule(null)}
+                />
+              ) : (
+                <>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-roboto font-semibold text-sm text-black">
+                      {rule.name}
+                    </h3>
+                    <div className="flex gap-2">
+                      <button
+                        className="bg-black hover:bg-gray-800 text-white py-1 px-3 rounded text-sm font-helvetica"
+                        onClick={() => setEditingRule(rule)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="bg-red-500 hover:bg-red-600 text-red-900 py-1 px-3 rounded text-sm font-helvetica"
+                        onClick={() => deleteRule(rule.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-black font-helvetica">
+                    {rule.description}
+                  </p>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -132,53 +187,82 @@ const RuleForm: React.FC<RuleFormProps> = ({
   onSave,
   onCancel,
 }) => {
-  const [rule, setRule] = useState<Rule>(
-    initialRule || {
-      id: crypto.randomUUID(),
-      name: "",
-      description: "",
-      content: "",
-      isActive: true,
+  const [rule, setRule] = useState<Rule>(() => {
+    if (initialRule) {
+      return initialRule;
+    } else {
+      // Generate a new rule with a valid UUID
+      return {
+        id: crypto.randomUUID(),
+        name: "",
+        description: "",
+        content: "",
+        isActive: true,
+      };
     }
-  );
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(rule);
+  };
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSave(rule);
-      }}
+      className="bg-white border border-gray-200 rounded-lg p-4 mb-4 font-roboto"
+      onSubmit={handleSubmit}
     >
-      <div className="form-group">
-        <label>Name:</label>
+      <div className="mb-3">
+        <label className="block text-sm font-roboto font-semibold mb-1 text-black">
+          Name:
+        </label>
         <input
           type="text"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-helvetica"
           value={rule.name}
           onChange={(e) => setRule({ ...rule, name: e.target.value })}
+          required
         />
       </div>
 
-      <div className="form-group">
-        <label>Description:</label>
+      <div className="mb-3">
+        <label className="block text-sm font-roboto font-semibold mb-1 text-black">
+          Description:
+        </label>
         <input
           type="text"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-helvetica"
           value={rule.description}
           onChange={(e) => setRule({ ...rule, description: e.target.value })}
+          required
         />
       </div>
 
-      <div className="form-group">
-        <label>Rule Content:</label>
+      <div className="mb-3">
+        <label className="block text-sm font-roboto font-semibold mb-1 text-black">
+          Rule Content:
+        </label>
         <textarea
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-helvetica"
           value={rule.content}
           onChange={(e) => setRule({ ...rule, content: e.target.value })}
           rows={5}
+          required
         />
       </div>
 
-      <div className="form-actions">
-        <button type="submit">Save</button>
-        <button type="button" onClick={onCancel}>
+      <div className="flex justify-end gap-2 mt-4">
+        <button
+          type="submit"
+          className="bg-green-500 hover:bg-green-600 text-green-900 py-2 px-4 rounded font-helvetica"
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          className="bg-black hover:bg-gray-600 text-white py-2 px-4 rounded font-helvetica"
+          onClick={onCancel}
+        >
           Cancel
         </button>
       </div>

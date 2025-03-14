@@ -43,7 +43,7 @@ export class PopupManager {
         rules: filteredRules,
         position: position,
         onRuleSelect: (rule) => {
-          insertCallback(rule.description);
+          insertCallback(rule.content);
           this.hidePopup();
         },
         onClose: () => this.hidePopup(),

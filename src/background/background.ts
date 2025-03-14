@@ -20,7 +20,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Required for async response
 
       case "UPDATE_RULE":
-        handleRuleUpdate(message.rule);
+        // Handle rule update
+        (async () => {
+          try {
+            await handleRuleUpdate(message.rule, sendResponse);
+          } catch (error) {
+            console.error("Error in UPDATE_RULE handler:", error);
+            sendResponse({ success: false, error });
+          }
+        })();
+        return true;
+
+      case "DELETE_RULE":
+        // Handle rule deletion
+        (async () => {
+          try {
+            await handleRuleDelete(message.ruleId, sendResponse);
+          } catch (error) {
+            console.error("Error in DELETE_RULE handler:", error);
+            sendResponse({ success: false, error });
+          }
+        })();
+        return true;
+
+      case "ADD_RULE":
+        // Handle rule addition
+        (async () => {
+          try {
+            await handleRuleAdd(message.rule, sendResponse);
+          } catch (error) {
+            console.error("Error in ADD_RULE handler:", error);
+            sendResponse({ success: false, error });
+          }
+        })();
         return true;
 
       case "APPLY_RULES":
@@ -29,10 +61,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       default:
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error handling message:", error);
+    sendResponse({ success: false, error });
+  }
+  return true;
 });
 
-async function handleRuleUpdate(updatedRule: Rule) {
+async function handleRuleUpdate(
+  updatedRule: Rule,
+  sendResponse: (response?: any) => void
+) {
   try {
     const { rules } = await chrome.storage.sync.get(["rules"]);
 
@@ -45,7 +84,57 @@ async function handleRuleUpdate(updatedRule: Rule) {
     await chrome.storage.sync.set({
       rules: updatedRules,
     });
-  } catch (error) {}
+
+    sendResponse({ success: true, rules: updatedRules });
+  } catch (error) {
+    sendResponse({ success: false, error });
+  }
+}
+
+async function handleRuleDelete(
+  ruleId: string,
+  sendResponse: (response?: any) => void
+) {
+  try {
+    const { rules } = await chrome.storage.sync.get(["rules"]);
+
+    if (!rules) return;
+
+    const updatedRules = rules.filter((rule: Rule) => rule.id !== ruleId);
+
+    await chrome.storage.sync.set({
+      rules: updatedRules,
+    });
+
+    sendResponse({ success: true, rules: updatedRules });
+  } catch (error) {
+    sendResponse({ success: false, error });
+  }
+}
+
+async function handleRuleAdd(
+  newRule: Rule,
+  sendResponse: (response?: any) => void
+) {
+  try {
+    // Get current rules
+    const result = await chrome.storage.sync.get(["rules"]);
+
+    // Create updated rules array
+    const currentRules = Array.isArray(result.rules) ? result.rules : [];
+    const updatedRules = [...currentRules, newRule];
+
+    // Save updated rules
+    await chrome.storage.sync.set({
+      rules: updatedRules,
+    });
+
+    // Send response
+    sendResponse({ success: true, rules: updatedRules });
+  } catch (error) {
+    console.error("Error adding rule:", error);
+    sendResponse({ success: false, error: String(error) });
+  }
 }
 
 async function applyRulesToChat(tabId?: number) {

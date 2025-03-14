@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    width: 400px;
+    min-width: 400px;
+    font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .font-stack-primary {
+    font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+  }
+
+  .font-stack-secondary {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  }
+}

@@ -16,16 +16,8 @@ const RulesPopup: React.FC<RulesPopupProps> = ({
 }) => {
   return (
     <div
+      className="absolute bg-black text-blue-500 border border-gray-700 z-[1000] p-2.5 rounded-md shadow-lg font-roboto"
       style={{
-        position: "absolute",
-        display: "block",
-        backgroundColor: "#000",
-        color: "#007bff",
-        border: "1px solid #333",
-        zIndex: 1000,
-        padding: "10px",
-        borderRadius: "5px",
-        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
         left: position.left,
         top: position.top,
       }}
@@ -34,11 +26,7 @@ const RulesPopup: React.FC<RulesPopupProps> = ({
         <div
           key={rule.id}
           onClick={() => onRuleSelect(rule)}
-          style={{
-            padding: "8px",
-            cursor: "pointer",
-            borderBottom: "1px solid #333",
-          }}
+          className="p-2 cursor-pointer border-b border-gray-700 hover:bg-gray-800 font-helvetica"
         >
           {rule.name}
         </div>
