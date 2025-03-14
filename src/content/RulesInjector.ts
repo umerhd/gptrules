@@ -1,10 +1,10 @@
 import { PopupManager } from "./PopupManager";
 import { ContentEditableHandler } from "./ContentEditableHandler";
 import { TextAreaHandler } from "./TextAreaHandler";
-import { RuleSet } from "../types";
+import { Rule } from "../types";
 
 export class RulesInjector {
-  private activeRuleSet: RuleSet | null = null;
+  private rules: Rule[] = [];
   private popupManager: PopupManager;
   private contentEditableHandler: ContentEditableHandler;
   private textAreaHandler: TextAreaHandler;
@@ -14,16 +14,16 @@ export class RulesInjector {
     this.contentEditableHandler = new ContentEditableHandler(this.popupManager);
     this.textAreaHandler = new TextAreaHandler(this.popupManager);
 
-    this.loadActiveRuleSet();
+    this.loadRules();
     this.setupListeners();
     this.setupMutationObserver();
   }
 
-  private async loadActiveRuleSet() {
+  private async loadRules() {
     try {
-      const result = await chrome.storage.sync.get("activeRuleSet");
-      this.activeRuleSet = result.activeRuleSet || null;
-      this.popupManager.setRuleSet(this.activeRuleSet);
+      const result = await chrome.storage.sync.get("rules");
+      this.rules = result.rules || [];
+      this.popupManager.setRules(this.rules);
     } catch (error) {}
   }
 

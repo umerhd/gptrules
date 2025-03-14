@@ -1,4 +1,4 @@
-import { Rule, RuleSet } from "../types";
+import { Rule } from "../types";
 
 // Collection of default rules
 export const defaultRules: Rule[] = [
@@ -68,12 +68,3 @@ export const defaultRules: Rule[] = [
     isActive: false,
   },
 ];
-
-// Function to create the default ruleset
-export function createDefaultRuleSet(): RuleSet {
-  return {
-    id: crypto.randomUUID(),
-    name: "Default Rules",
-    rules: defaultRules,
-  };
-}

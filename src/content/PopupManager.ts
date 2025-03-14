@@ -1,18 +1,18 @@
-import { Rule, RuleSet } from "../types";
+import { Rule } from "../types";
 import React from "react";
 import ReactDOM from "react-dom";
 import RulesPopup from "./RulesPopup";
 
 export class PopupManager {
   private popupContainer: HTMLElement | null = null;
-  private activeRuleSet: RuleSet | null = null;
+  private rules: Rule[] = [];
 
   constructor() {
     this.createPopupContainer();
   }
 
-  public setRuleSet(ruleSet: RuleSet | null) {
-    this.activeRuleSet = ruleSet;
+  public setRules(rules: Rule[]) {
+    this.rules = rules;
   }
 
   private createPopupContainer() {
@@ -26,9 +26,9 @@ export class PopupManager {
     filter: string,
     insertCallback: (content: string) => void
   ) {
-    if (!this.activeRuleSet || !this.popupContainer) return;
+    if (!this.rules.length || !this.popupContainer) return;
 
-    const filteredRules = this.activeRuleSet.rules.filter((rule) =>
+    const filteredRules = this.rules.filter((rule) =>
       rule.name.toLowerCase().includes(filter.toLowerCase())
     );
 

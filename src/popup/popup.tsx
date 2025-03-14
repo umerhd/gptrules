@@ -1,64 +1,55 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Rule, RuleSet } from "../types";
+import { Rule } from "../types";
 import "./popup.css";
 
 const Popup: React.FC = () => {
-  const [ruleSets, setRuleSets] = useState<RuleSet[]>([]);
-  const [activeRuleSet, setActiveRuleSet] = useState<RuleSet | null>(null);
+  const [rules, setRules] = useState<Rule[]>([]);
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
 
   useEffect(() => {
     console.log("Popup mounted - Loading initial data");
-    loadRuleSets();
+    loadRules();
   }, []);
 
-  const loadRuleSets = async () => {
+  const loadRules = async () => {
     try {
-      const result = await chrome.storage.sync.get([
-        "ruleSets",
-        "activeRuleSet",
-      ]);
-      console.log("Loaded rule sets:", result);
-      setRuleSets(result.ruleSets || []);
-      setActiveRuleSet(result.activeRuleSet || null);
+      const result = await chrome.storage.sync.get(["rules"]);
+      console.log("Loaded rules:", result);
+      setRules(result.rules || []);
     } catch (error) {
-      console.error("Error loading rule sets:", error);
+      console.error("Error loading rules:", error);
     }
   };
 
   const saveRule = async (rule: Rule) => {
     try {
-      if (!activeRuleSet) {
-        console.warn("No active rule set to save to");
-        return;
-      }
-
       console.log("Saving rule:", rule);
-      const updatedRuleSet = {
-        ...activeRuleSet,
-        rules: editingRule
-          ? activeRuleSet.rules.map((r) => (r.id === rule.id ? rule : r))
-          : [...activeRuleSet.rules, rule],
-      };
+      const updatedRules = editingRule
+        ? rules.map((r) => (r.id === rule.id ? rule : r))
+        : [...rules, rule];
 
       await chrome.storage.sync.set({
-        ruleSets: ruleSets.map((rs) =>
-          rs.id === updatedRuleSet.id ? updatedRuleSet : rs
-        ),
-        activeRuleSet: updatedRuleSet,
+        rules: updatedRules,
       });
       console.log("Rule saved successfully");
 
-      setRuleSets(
-        ruleSets.map((rs) =>
-          rs.id === updatedRuleSet.id ? updatedRuleSet : rs
-        )
-      );
-      setActiveRuleSet(updatedRuleSet);
+      setRules(updatedRules);
       setEditingRule(null);
     } catch (error) {
       console.error("Error saving rule:", error);
+    }
+  };
+
+  const deleteRule = async (ruleId: string) => {
+    try {
+      const updatedRules = rules.filter((r) => r.id !== ruleId);
+      await chrome.storage.sync.set({
+        rules: updatedRules,
+      });
+      setRules(updatedRules);
+    } catch (error) {
+      console.error("Error deleting rule:", error);
     }
   };
 
@@ -66,7 +57,7 @@ const Popup: React.FC = () => {
     <div className="popup-container">
       <header>
         <h1>AI Chat Rules Manager</h1>
-        <div>Active Rules: {activeRuleSet?.rules.length || 0}</div>
+        <div>Active Rules: {rules.length}</div>
       </header>
 
       <button
@@ -85,57 +76,47 @@ const Popup: React.FC = () => {
         Test Storage
       </button>
 
-      <div className="rule-sets">
-        <h2>Rule Sets</h2>
-        <select
-          value={activeRuleSet?.id || ""}
-          onChange={(e) => {
-            const selected = ruleSets.find((rs) => rs.id === e.target.value);
-            setActiveRuleSet(selected || null);
-            chrome.storage.sync.set({ activeRuleSet: selected });
-          }}
-        >
-          <option value="">Select a Rule Set</option>
-          {ruleSets.map((rs) => (
-            <option key={rs.id} value={rs.id}>
-              {rs.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className="rules-container">
+        <h2>Rules</h2>
 
-      {activeRuleSet && (
-        <div className="rules-list">
-          <h3>Rules in {activeRuleSet.name}</h3>
-          {activeRuleSet.rules.map((rule) => (
-            <div key={rule.id} className="rule-item">
-              <h4>{rule.name}</h4>
-              <p>{rule.description}</p>
-              <div className="rule-actions">
-                <button onClick={() => setEditingRule(rule)}>Edit</button>
-                <button
-                  onClick={() => {
-                    /* Handle delete */
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {(editingRule || activeRuleSet) && (
-        <div className="rule-editor">
-          <h3>{editingRule ? "Edit Rule" : "New Rule"}</h3>
+        {editingRule ? (
           <RuleForm
             initialRule={editingRule}
             onSave={saveRule}
             onCancel={() => setEditingRule(null)}
           />
+        ) : (
+          <button
+            className="add-rule-btn"
+            onClick={() =>
+              setEditingRule({
+                id: crypto.randomUUID(),
+                name: "",
+                description: "",
+                content: "",
+                isActive: true,
+              })
+            }
+          >
+            Add New Rule
+          </button>
+        )}
+
+        <div className="rules-list">
+          {rules.map((rule) => (
+            <div key={rule.id} className="rule-item">
+              <div className="rule-header">
+                <h3>{rule.name}</h3>
+                <div className="rule-actions">
+                  <button onClick={() => setEditingRule(rule)}>Edit</button>
+                  <button onClick={() => deleteRule(rule.id)}>Delete</button>
+                </div>
+              </div>
+              <p className="rule-description">{rule.description}</p>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -205,17 +186,10 @@ const RuleForm: React.FC<RuleFormProps> = ({
   );
 };
 
-// Initialize React with error handling
-const container = document.getElementById("root");
-if (container) {
-  console.log("Initializing React app");
-  try {
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("root");
+  if (container) {
     const root = createRoot(container);
     root.render(<Popup />);
-    console.log("React app rendered successfully");
-  } catch (error) {
-    console.error("Failed to render React app:", error);
   }
-}
-
-export default Popup;
+});

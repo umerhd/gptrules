@@ -6,10 +6,4 @@ interface Rule {
   isActive: boolean;
 }
 
-interface RuleSet {
-  id: string;
-  name: string;
-  rules: Rule[];
-}
-
-export type { Rule, RuleSet };
+export type { Rule };

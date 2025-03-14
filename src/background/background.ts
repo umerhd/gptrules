@@ -1,13 +1,10 @@
-import { Rule, RuleSet } from "../types";
-import { createDefaultRuleSet } from "./defaultRules";
+import { Rule } from "../types";
+import { defaultRules } from "./defaultRules";
 
 chrome.runtime.onInstalled.addListener(async () => {
   try {
-    const defaultRuleSet = createDefaultRuleSet();
-
     await chrome.storage.sync.set({
-      ruleSets: [defaultRuleSet],
-      activeRuleSet: defaultRuleSet,
+      rules: defaultRules,
     });
   } catch (error) {}
 });
@@ -16,9 +13,9 @@ chrome.runtime.onInstalled.addListener(async () => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   try {
     switch (message.type) {
-      case "GET_ACTIVE_RULESET":
-        chrome.storage.sync.get("activeRuleSet", (result) => {
-          sendResponse(result.activeRuleSet);
+      case "GET_RULES":
+        chrome.storage.sync.get("rules", (result) => {
+          sendResponse(result.rules);
         });
         return true; // Required for async response
 
@@ -37,27 +34,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 async function handleRuleUpdate(updatedRule: Rule) {
   try {
-    const { ruleSets, activeRuleSet } = await chrome.storage.sync.get([
-      "ruleSets",
-      "activeRuleSet",
-    ]);
+    const { rules } = await chrome.storage.sync.get(["rules"]);
 
-    if (!activeRuleSet) return;
+    if (!rules) return;
 
-    const updatedRuleSet = {
-      ...activeRuleSet,
-      rules: activeRuleSet.rules.map((rule: Rule) =>
-        rule.id === updatedRule.id ? updatedRule : rule
-      ),
-    };
-
-    const updatedRuleSets = ruleSets.map((rs: RuleSet) =>
-      rs.id === updatedRuleSet.id ? updatedRuleSet : rs
+    const updatedRules = rules.map((rule: Rule) =>
+      rule.id === updatedRule.id ? updatedRule : rule
     );
 
     await chrome.storage.sync.set({
-      ruleSets: updatedRuleSets,
-      activeRuleSet: updatedRuleSet,
+      rules: updatedRules,
     });
   } catch (error) {}
 }
@@ -65,12 +51,14 @@ async function handleRuleUpdate(updatedRule: Rule) {
 async function applyRulesToChat(tabId?: number) {
   if (!tabId) return;
 
-  const { activeRuleSet } = await chrome.storage.sync.get("activeRuleSet");
-  if (!activeRuleSet) return;
+  const { rules } = await chrome.storage.sync.get("rules");
+  if (!rules || rules.length === 0) return;
+
+  const activeRules = rules.filter((rule: Rule) => rule.isActive);
 
   // Send active rules to content script
   chrome.tabs.sendMessage(tabId, {
-    type: "RULES_UPDATE",
-    rules: activeRuleSet.rules.filter((r: Rule) => r.isActive),
+    type: "APPLY_RULES",
+    rules: activeRules,
   });
 }
