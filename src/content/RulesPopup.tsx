@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Rule } from "../types";
 import { Hash } from "lucide-react";
 import "./rules-popup.css";
@@ -18,48 +18,40 @@ const RulesPopup: React.FC<RulesPopupProps> = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const selectedItemRef = useRef<HTMLDivElement>(null);
 
-  // Handle keyboard navigation
+  // Add debugging effect
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          setSelectedIndex((prev) => Math.min(prev + 1, rules.length - 1));
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          setSelectedIndex((prev) => Math.max(prev - 1, 0));
-          break;
-        case "Enter":
-          e.preventDefault();
-          if (rules[selectedIndex]) {
-            onRuleSelect(rules[selectedIndex]);
-          }
-          break;
-        case "Escape":
-          e.preventDefault();
-          onClose();
-          break;
-      }
-    };
+    console.log(
+      "[GPTRules Debug] RulesPopup rendered with",
+      rules.length,
+      "rules"
+    );
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [rules, selectedIndex, onRuleSelect, onClose]);
-
-  // Scroll selected item into view
-  useEffect(() => {
-    if (selectedItemRef.current && containerRef.current) {
-      selectedItemRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
+    // Check if there are any CSS issues
+    if (containerRef.current) {
+      const styles = window.getComputedStyle(containerRef.current);
+      console.log("[GPTRules Debug] Popup container styles:", {
+        pointerEvents: styles.pointerEvents,
+        zIndex: styles.zIndex,
+        position: styles.position,
+        display: styles.display,
       });
     }
-  }, [selectedIndex]);
+
+    return () => {
+      console.log("[GPTRules Debug] RulesPopup unmounting");
+    };
+  }, [rules.length]);
+
+  const handleRuleClick = (rule: Rule, index: number) => {
+    console.log("[GPTRules Debug] Rule clicked:", rule.name);
+    onRuleSelect(rule);
+  };
+
+  const handleMouseEnter = (index: number) => {
+    console.log("[GPTRules Debug] Mouse entered rule at index:", index);
+    setSelectedIndex(index);
+  };
 
   return (
     <div
@@ -70,15 +62,21 @@ const RulesPopup: React.FC<RulesPopupProps> = ({
         maxWidth: "300px",
         minWidth: "200px",
       }}
+      onClick={(e) => {
+        console.log("[GPTRules Debug] Popup container clicked");
+        e.stopPropagation(); // Prevent click from propagating
+      }}
     >
       <div className="rules-list" ref={containerRef}>
         {rules.map((rule, index) => (
           <div
             key={rule.id}
-            ref={index === selectedIndex ? selectedItemRef : null}
-            onClick={() => onRuleSelect(rule)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRuleClick(rule, index);
+            }}
             className={`rule-item ${index === selectedIndex ? "selected" : ""}`}
-            onMouseEnter={() => setSelectedIndex(index)}
+            onMouseEnter={() => handleMouseEnter(index)}
           >
             <Hash className="w-4 h-4 text-black flex-shrink-0" />
             <span className="rule-title">{rule.name}</span>

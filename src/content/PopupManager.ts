@@ -6,12 +6,18 @@ import RulesPopup from "./RulesPopup";
 export class PopupManager {
   private popupContainer: HTMLElement | null = null;
   private rules: Rule[] = [];
+  private isPopupVisible: boolean = false;
 
   constructor() {
     this.createPopupContainer();
+    this.loadRules();
   }
 
   public setRules(rules: Rule[]) {
+    console.log(
+      "[GPTRules Debug] Setting rules in PopupManager:",
+      rules.length
+    );
     this.rules = rules;
   }
 
@@ -27,7 +33,11 @@ export class PopupManager {
     this.popupContainer.id = "rules-popup-container";
     this.popupContainer.style.position = "fixed";
     this.popupContainer.style.zIndex = "99999"; // Very high z-index
-    this.popupContainer.style.pointerEvents = "auto";
+    this.popupContainer.style.pointerEvents = "none"; // Start with none
+    this.popupContainer.style.display = "none"; // Hide initially
+
+    // Add debugging log
+    console.log("[GPTRules Debug] Creating popup container");
 
     // Append to body
     document.body.appendChild(this.popupContainer);
@@ -38,15 +48,31 @@ export class PopupManager {
     filter: string,
     insertCallback: (content: string) => void
   ) {
-    if (!this.rules.length || !this.popupContainer) return;
+    if (!this.rules.length || !this.popupContainer) {
+      console.log("[GPTRules Debug] Cannot show popup: no rules or container");
+      return;
+    }
 
     const filteredRules = this.rules.filter((rule) =>
       rule.name.toLowerCase().includes(filter.toLowerCase())
     );
 
     if (filteredRules.length === 0) {
+      console.log("[GPTRules Debug] No matching rules found for:", filter);
       this.hidePopup();
       return;
+    }
+
+    console.log(
+      "[GPTRules Debug] Showing popup with",
+      filteredRules.length,
+      "rules"
+    );
+
+    // Make container visible
+    if (this.popupContainer) {
+      this.popupContainer.style.display = "block";
+      this.isPopupVisible = true;
     }
 
     // Get position relative to viewport
@@ -72,23 +98,39 @@ export class PopupManager {
 
     const position = { left, top };
 
-    ReactDOM.render(
-      React.createElement(RulesPopup, {
-        rules: filteredRules,
-        position: position,
-        onRuleSelect: (rule) => {
-          insertCallback(rule.content);
-          this.hidePopup();
-        },
-        onClose: () => this.hidePopup(),
-      }),
-      this.popupContainer
-    );
+    try {
+      ReactDOM.render(
+        React.createElement(RulesPopup, {
+          rules: filteredRules,
+          position: position,
+          onRuleSelect: (rule) => {
+            console.log("[GPTRules Debug] Rule selected:", rule.name);
+            insertCallback(rule.content);
+            this.hidePopup();
+          },
+          onClose: () => this.hidePopup(),
+        }),
+        this.popupContainer
+      );
+    } catch (error) {
+      console.error("[GPTRules Debug] Error rendering popup:", error);
+    }
   }
 
   public hidePopup() {
     if (this.popupContainer) {
+      console.log("[GPTRules Debug] Hiding popup");
       ReactDOM.unmountComponentAtNode(this.popupContainer);
+      this.popupContainer.style.display = "none";
+      this.isPopupVisible = false;
     }
+  }
+
+  private loadRules() {
+    // Use message passing to get rules from background script
+    chrome.runtime.sendMessage({ type: "GET_RULES" }, (response) => {
+      this.rules = response || [];
+      console.log("[GPTRules Debug] Loaded", this.rules.length, "rules");
+    });
   }
 }

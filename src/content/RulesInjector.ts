@@ -19,16 +19,14 @@ export class RulesInjector {
     this.setupMutationObserver();
   }
 
-  private async loadRules() {
-    try {
-      const result = await chrome.storage.sync.get("rules");
-      this.rules = result.rules || [];
+  private loadRules() {
+    chrome.runtime.sendMessage({ type: "GET_RULES" }, (response) => {
+      this.rules = response || [];
       this.popupManager.setRules(this.rules);
-    } catch (error) {}
+    });
   }
 
   private setupListeners() {
-    // Find all contenteditable elements
     const contentEditableDivs = document.querySelectorAll(
       "[contenteditable='true']"
     );
@@ -39,7 +37,6 @@ export class RulesInjector {
         this.contentEditableHandler.addEventListeners(div as HTMLElement);
       });
     } else {
-      // Retry after a short delay
       setTimeout(() => this.setupListeners(), 1000);
     }
 
@@ -55,11 +52,9 @@ export class RulesInjector {
           const addedNodes = Array.from(mutation.addedNodes);
           for (const node of addedNodes) {
             if (node instanceof HTMLElement) {
-              // Check if the added node is a contenteditable element
               if (node.getAttribute("contenteditable") === "true") {
                 this.contentEditableHandler.addEventListeners(node);
               }
-              // Check if the added node contains contenteditable elements
               const contentEditables = node.querySelectorAll(
                 "[contenteditable='true']"
               );
