@@ -200,9 +200,30 @@ const RuleForm: React.FC<RuleFormProps> = ({
       };
     }
   });
+  const [nameError, setNameError] = useState<string>("");
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+
+    // Check if name starts with #
+    if (newName.startsWith("#")) {
+      setNameError("Rule name cannot start with #");
+    } else {
+      setNameError("");
+    }
+
+    setRule({ ...rule, name: newName });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate rule name before saving
+    if (rule.name.startsWith("#")) {
+      setNameError("Rule name cannot start with #");
+      return;
+    }
+
     onSave(rule);
   };
 
@@ -217,11 +238,14 @@ const RuleForm: React.FC<RuleFormProps> = ({
         </label>
         <input
           type="text"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-helvetica"
+          className={`w-full px-3 py-2 border ${
+            nameError ? "border-red-500" : "border-gray-300"
+          } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-helvetica`}
           value={rule.name}
-          onChange={(e) => setRule({ ...rule, name: e.target.value })}
+          onChange={handleNameChange}
           required
         />
+        {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
       </div>
 
       <div className="mb-3">

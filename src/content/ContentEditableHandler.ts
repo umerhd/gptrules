@@ -18,7 +18,10 @@ export class ContentEditableHandler {
 
   private handleInput(element: HTMLElement) {
     const textContent = element.innerText || "";
-    const match = textContent.match(/#(\w*)$/); // Use # as the trigger
+
+    // Check for valid # pattern - should not have multiple consecutive # characters
+    // This regex matches a # followed by word characters, but only if it's not preceded by another #
+    const match = textContent.match(/(?<!\#)\#(\w*)$/);
 
     if (match) {
       this.popupManager.showPopup(element, match[1], (content) => {

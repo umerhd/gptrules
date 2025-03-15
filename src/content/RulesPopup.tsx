@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Rule } from "../types";
 import { Hash } from "lucide-react";
 import "./rules-popup.css";
