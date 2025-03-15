@@ -97,7 +97,6 @@ const Popup: React.FC = () => {
   return (
     <div className="w-[400px] p-5 font-inter bg-white">
       <header className="mb-5 flex items-center space-x-2">
-        <Gavel className="w-6 h-6 text-black" />
         <h1 className="text-xl font-inter font-bold"> GPT Rules Manager</h1>
       </header>
 
