@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "GPT Rules",
   "version": "0.0.1",
-  "description": "GPT Rules: Supercharge Your AI Chats with GPT Rules",
+  "description": "GPT Rules: Supercharge Your AI Chats with Cursor Style Rules.",
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["https://chat.openai.com/*", "https://claude.ai/*"],
   "action": {
