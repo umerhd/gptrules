@@ -73,7 +73,7 @@ export class PopupManager {
 
     // If too close to bottom of viewport, position above
     if (rect.bottom + 200 > viewportHeight) {
-      top = `${rect.top - 210}px`;
+      top = `${rect.top - 250}px`;
     }
 
     // If too close to right edge, align right edge of popup with right edge of input
