@@ -51,7 +51,10 @@ const RulesPopup: React.FC<RulesPopupProps> = ({
             className={`rule-item ${index === selectedIndex ? "selected" : ""}`}
             onMouseEnter={() => handleMouseEnter(index)}
           >
-            <Hash className="w-4 h-4 text-black flex-shrink-0" />
+            <Hash
+              className="w-4 h-4 text-black flex-shrink-0"
+              style={{ width: "16px", height: "16px" }}
+            />
             <span className="rule-title">{rule.name}</span>
           </div>
         ))}
