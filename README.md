@@ -4,6 +4,15 @@
   <img src="images/twitter-image.png" alt="GPT Rules Banner" width="600">
 </p>
 
+## Demo
+
+<p align="center">
+  <video width="600" controls>
+    <source src="images/demo.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
+
 ## Supercharge Your AI Chats with GPT Rules
 
 Transform your AI experience with powerful shortcuts that save time and enhance results. GPT Rules brings Cursor-style prompting to your browser, letting you create custom commands for consistent, high-quality AI responses every time.
