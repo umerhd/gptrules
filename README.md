@@ -16,6 +16,18 @@ Transform your AI experience with powerful shortcuts that save time and enhance 
 - **Enhanced Results**: Get more reliable, high-quality responses from your AI assistant
 - **Browser Integration**: Works seamlessly with your existing AI chat interfaces
 
+## Installation
+
+### Chrome Extension Installation (from dist folder)
+
+1. Download or clone this repository to your local machine
+2. Open Chrome and navigate to `chrome://extensions/`
+3. Enable "Developer mode" by toggling the switch in the top right corner
+4. Click on "Load unpacked" button
+5. Browse to the repository location and select the `dist` folder
+6. The GPT Rules extension should now appear in your extensions list
+7. Click on the extension icon in your browser toolbar to start using GPT Rules
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
